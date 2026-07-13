@@ -5,6 +5,130 @@ unitId: unit1
 
 ## Propósito
 
-Comprender la arquitectura de un computador digital moderno usando como caso de estudio un computador simple, pero didáctico llamado computador Hack. En esta unidad programarás este computador utilizando su lenguaje ensamblador y desarrollarás programas simples, pero interactivos, que harán uso de operaciones de entrada y salida.
+Comprender la arquitectura de un computador digital moderno usando como caso de estudio un computador simple, pero didáctico llamado computador Hack. 
+En esta unidad programarás este computador utilizando su lenguaje ensamblador y desarrollarás programas simples, pero interactivos, que 
+harán uso de operaciones de entrada y salida.
 
 ## Actividades
+
+### Actividad 01
+
+En esta actividad vamos a explorar el concepto del ciclo fetch-decode-execute
+
+El siguiente programa está escrito en el lenguaje ensamblador del computador 
+Hack. Este computador no es un computador comercial, sino un computador didáctico 
+que te permitirá acercarte a los conceptos fundamentales de manera amigable.
+
+``` asm
+@1 
+D=A 
+@2 
+D=D+A 
+@16 
+M=D 
+@END
+(END) 
+0;JMP
+```
+
+¿Qué crees que haga este programa? 
+
+Para responder a esta pregunta vamos a analizarlo paso a paso usando un simulador 
+de la CPU Hack que está [aquí](https://nand2tetris.github.io/web-ide/cpu).
+
+Para ejecutar este programa la CPU realiza un **ciclo** constante 
+llamado Fetch-Decode-Execute.
+
+El ciclo Fetch-Decode-Execute describe cómo la CPU ejecuta instrucciones de 
+un programa. Aquí está explicado de forma breve y simple:
+
+Fetch (buscar): la CPU obtiene (lee) la siguiente instrucción desde la memoria. El contador de programa (PC) 
+indica dónde se encuentra esa instrucción en la memoria ROM.
+
+Decode (decodificar): la CPU interpreta la instrucción que acaba de leer. Esto significa entender qué 
+operación debe realizarse y qué datos o recursos necesita.
+
+Execute (ejecutar): la CPU realiza la operación indicada. Por ejemplo, puede ser una operación matemática, 
+mover datos entre registros, o acceder a la memoria.
+
+Este ciclo se repite continuamente mientras la computadora esté encendida, procesando instrucciones una 
+tras otra. Es la base del funcionamiento de cualquier procesador.
+
+### Actividad 02
+
+Escribe un programa en lenguaje ensamblador que sume los números 5 y 10, y almacene el 
+resultado en la dirección de memoria 20. Utiliza el simulador de la CPU Hack para ejecutar tu programa y verifica que el 
+resultado es correcto.
+
+### Actividad 03
+
+Ahora vamos a analizar juntos el siguiente programa usando este [simulador](https://nand2tetris.github.io/web-ide/cpu).
+
+Luego de este análisis, deberás quedar con estos conceptos claros.
+
+* Las partes del computador Hack.
+* El modelo de programación de la CPU.
+* La diferencia entre memoria RAM y registros.
+* Los tipos de instrucciones del lenguaje ensamblador.
+* Cómo leo el teclado y muestro en pantalla.
+* Cómo implemento un bucle.
+* Cómo implemento una condición.
+* ¿Qué es la ALU y qué operaciones realiza?
+
+En ["este"](https://www.nand2tetris.org/_files/ugd/44046b_7ef1c00a714c46768f08c459a6cab45a.pdf) 
+enlace está la documentación del computador Hack.
+
+``` asm
+@SCREEN
+D=A
+@i
+M=D
+(READKEYBOARD)
+@KBD
+D=M
+@KEYPRESSED
+D;JNE
+@i
+D=M
+@SCREEN
+D=D-A
+@READKEYBOARD
+D;JLE
+@i
+M=M-1
+A=M
+M=0
+@READKEYBOARD
+0;JMP
+
+(KEYPRESSED)
+@i
+D=M
+@KBD
+D=D-A
+@READKEYBOARD
+D;JGE
+@16
+A=M
+M=-1
+@i
+M=M+1
+@READKEYBOARD
+0;JMP
+```
+### Actividad 04
+
+#### Control de flujo con saltos
+
+Vamos a resolver juntos este problema:
+
+Escribe un programa que compare el valor almacenado en la dirección de memoria 5 
+con el valor 10. Si el valor es menor que 10, guarda el valor 1 en la dirección 7. 
+Si el valor es mayor o igual a 10, guarda el valor 0 en la dirección 7.
+
+### Actividad 05
+
+#### Implementando un ciclo simple
+
+Vamos a crear un programa que **use un ciclo** para sumar los números del 1 al 5 
+y guarde el resultado en la dirección de memoria 12.
