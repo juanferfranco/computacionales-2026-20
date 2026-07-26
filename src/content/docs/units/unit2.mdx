@@ -8,3 +8,274 @@ unitId: unit2
 Descubrir cómo se traducen algunos conceptos fundamentales de la programación en alto nivel, como condicionales, ciclos, punteros, funciones y arreglos, a lenguaje ensamblador. En esta unidad utilizarás el lenguaje Hack de la unidad anterior para implementar estos conceptos y tender un puente hacia la exploración de conceptos fundamentales en C++.
 
 ## Actividades
+
+En las actividades de esta unidad trabajarás en clase con el simulador del computador Hack. El propósito es que practiques, formules preguntas y puedas explicar con fluidez tus decisiones durante la evaluación escrita. Las actividades son espacios de aplicación y acompañamiento: no es necesario elaborar una bitácora ni entregar un informe separado.
+
+Algunas actividades no incluyen una solución. Esto es intencional: primero intenta resolverlas, prueba tu programa y pregunta en clase cuando encuentres una dificultad.
+
+### Actividad 01
+
+#### Convierte un ciclo `while` en un ciclo `for`
+
+Considera el siguiente programa:
+
+```cpp
+// Suma 1 + ... + 100.
+int i = 1;
+int sum = 0;
+
+while (i <= 100) {
+    sum += i;
+    i++;
+}
+```
+
+Una posible traducción a lenguaje Hack es:
+
+```asm
+// Suma 1 + ... + 100.
+@i
+M=1
+@sum
+M=0
+
+(LOOP)
+@i
+D=M
+@100
+D=D-A
+@END
+D;JGT
+@i
+D=M
+@sum
+M=D+M
+@i
+M=M+1
+@LOOP
+0;JMP
+
+(END)
+@END
+0;JMP
+```
+
+En clase:
+
+- Simula el programa paso a paso y predice qué ocurrirá con `i` y `sum`.
+- Escribe el equivalente usando un ciclo `for` en C++.
+- Identifica en el programa Hack la inicialización, la condición, el cuerpo y la actualización del ciclo.
+- Explica qué saltos permiten implementar el ciclo.
+
+No se incluye una solución completa para esta actividad. Compara tus decisiones con tus compañeros y pregunta en clase sobre las diferencias entre las dos formas de expresar el ciclo.
+
+### Actividad 02
+
+#### Punteros y direcciones de memoria
+
+Un puntero es una variable que almacena la dirección de memoria de otra variable. Observa el siguiente programa en C++:
+
+```cpp
+int a = 10;
+int* p;
+p = &a;
+*p = 20;
+```
+
+En este caso, `p` almacena la dirección de `a` y `*p = 20` cambia el contenido de esa dirección. El operador `&` obtiene una dirección y el operador `*` permite acceder al contenido de la dirección almacenada en un puntero.
+
+Ahora analiza también este ejemplo:
+
+```cpp
+int a = 10;
+int b = 5;
+int* p;
+p = &a;
+b = *p;
+```
+
+En clase:
+
+- Señala qué variables guardan valores y cuál guarda una dirección.
+- Asigna direcciones concretas de la RAM Hack a `a`, `b` y `p`.
+- Traduce ambos programas a ensamblador Hack.
+- Simula cada instrucción y explica cómo cambia la memoria después de cada acceso indirecto.
+
+No se incluye la traducción resuelta. Construye y prueba cada fragmento paso a paso; si tu programa no produce el resultado esperado, revisa primero qué contiene `A`, qué contiene `D` y qué dirección se está usando como destino.
+
+### Actividad 03
+
+#### Experimenta con arreglos
+
+Los arreglos son colecciones de datos almacenados en posiciones consecutivas de la memoria. Considera el siguiente programa:
+
+```cpp
+int arr[] = {1, 20, 13, 24, 55, 96, 87, 83, 98, 102};
+int sum = 0;
+
+for (int j = 0; j < 10; j++) {
+    sum = sum + arr[j];
+}
+```
+
+En clase implementa el programa en lenguaje Hack aplicando el concepto de punteros. Supón que los datos del arreglo están almacenados desde la dirección 16 e inicializa allí todos sus valores.
+
+Construye el programa paso a paso mediante pruebas:
+
+- Primero verifica que el arreglo quede almacenado en las direcciones correctas.
+- Después prueba el acceso a un solo elemento mediante un puntero.
+- Luego implementa el ciclo que recorre los diez elementos.
+- Finalmente verifica el valor de `sum` en el simulador y explica cómo lo obtuviste.
+
+
+### Actividad 04
+
+#### Experimenta con funciones
+
+Considera el siguiente programa en C++:
+
+```cpp
+int result = 0;
+
+int sum(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    result = sum(3, 4);
+}
+```
+
+Para traducirlo usaremos este protocolo de llamado:
+
+- Los argumentos se pasan en `R0`, `R1`, `R2`, etc.
+- El valor de retorno se pasa en `R0`.
+- La dirección de retorno se guarda en `R15`.
+- Las variables temporales adicionales pueden usar `R13` y `R14`.
+
+Observa una posible traducción guiada:
+
+```asm
+(START)
+
+// int result = 0;
+@result
+M=0
+
+// Cargar los argumentos de sum(3, 4).
+@3
+D=A
+@R0
+M=D
+@4
+D=A
+@R1
+M=D
+
+// Guardar la dirección de retorno.
+@RETURN_FROM_SUM
+D=A
+@R15
+M=D
+
+// Llamar a sum.
+@SUM
+0;JMP
+
+(RETURN_FROM_SUM)
+@R0
+D=M
+@result
+M=D
+
+(END)
+@END
+0;JMP
+
+// int sum(int a, int b) { return a + b; }
+(SUM)
+@R0
+D=M
+@R1
+D=D+M
+@R0
+M=D
+@R15
+A=M
+0;JMP
+```
+
+En clase:
+
+- Identifica dónde se cargan los argumentos, dónde se calcula el resultado y cómo se retorna al programa principal.
+- Simula la llamada a `SUM` y verifica el contenido de `R0`, `R15` y `result`.
+- Modifica la función para sumar tres argumentos usando `R0`, `R1` y `R2`.
+- Explica qué podría salir mal si se cambia el contenido de `R15` antes de regresar.
+
+### Actividad 05
+
+#### Aplica punteros, arreglos y funciones
+
+Integra los conceptos de la unidad resolviendo los siguientes problemas de traducción de C++ a ensamblador Hack. La expresión `std::cout` solo representa una salida del programa y no necesitas implementarla en ensamblador.
+
+Usa el protocolo de llamado de la actividad anterior. Para estas funciones, los argumentos se pasan en `R0`, `R1`, `R2`, etc., el retorno se entrega en `R0` y la dirección de retorno se guarda en `R15`.
+
+**Problema 1: intercambio mediante punteros**
+
+```cpp
+void swap(int* pa, int* pb) {
+    int tmp = *pa;
+    *pa = *pb;
+    *pb = tmp;
+}
+
+int main() {
+    int a = 10;
+    int b = 20;
+    swap(&a, &b);
+}
+```
+
+**Problema 2: suma de un arreglo mediante una función**
+
+```cpp
+int calSum(int* parr, int arrSize) {
+    int sum = 0;
+    for (int i = 0; i < arrSize; i++) {
+        sum = sum + *(parr + i);
+    }
+    return sum;
+}
+
+int main() {
+    int arr[] = {10, 15, 2, 3, 50};
+    int sum = calSum(arr, 5);
+}
+```
+
+En clase construye cada programa por etapas y prueba cada etapa en el simulador. Después explica a un compañero:
+
+- cómo se representan las direcciones de `a`, `b` y `arr`;
+- cómo se lee y modifica un dato mediante un puntero;
+- cómo se avanza de un elemento del arreglo al siguiente;
+- cómo se pasan los argumentos y se recupera el valor de retorno.
+
+No se incluye una solución. El objetivo es que practiques la traducción, compares estrategias y preguntes por las decisiones que todavía no puedas justificar.
+
+### Actividad 06
+
+#### Evaluación escrita de la unidad
+
+La evaluación de esta unidad será escrita. Las actividades anteriores son la preparación práctica para comprender y responder los problemas de la evaluación; no se solicita una bitácora ni una entrega de aplicación independiente.
+
+La evaluación puede incluir:
+
+- seguimiento de la ejecución de un programa Hack y predicción del contenido de registros y direcciones de memoria;
+- identificación de la inicialización, condición, cuerpo y actualización de un ciclo;
+- traducción de fragmentos sencillos con condicionales y ciclos;
+- explicación de la relación entre una variable, su dirección y un puntero;
+- recorrido de un arreglo mediante una dirección base y un índice o desplazamiento;
+- análisis de una llamada a función usando `R0`, `R1`, `R2` y `R15`;
+- escritura o corrección de un fragmento de ensamblador y justificación del resultado.
+
+Antes de la evaluación, asegúrate de poder explicar con tus propias palabras qué hace cada instrucción de tus ejercicios, qué cambia en la memoria y por qué el programa llega a su resultado.
