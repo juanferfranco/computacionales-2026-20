@@ -3,8 +3,706 @@ title: Lenguaje de alto nivel
 unitId: unit3
 ---
 
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
 ## Propósito
 
-Revisar conceptos de la programación en alto nivel, en particular el manejo de la memoria, conectando lo aprendido sobre lenguaje ensamblador con las abstracciones de C++. En esta unidad experimentarás con código, formularás hipótesis, observarás resultados y reflexionarás sobre lo que ocurre para aprender mediante investigación en acción.
+Comprender cómo un programa escrito en C++ representa y modifica el estado de un sistema computacional. Para esto estudiarás una aplicación completa de arte generativo construida sobre OpenFrameworks.
+
+La aplicación será el caso de estudio de toda la unidad. Primero la ejecutarás como un sistema terminado; después abrirás sus datos, funciones y reglas; finalmente modificarás una parte y demostrarás mediante pruebas que sigue cumpliendo los requisitos.
+
+No se espera que escribas toda la aplicación desde cero. Se espera que puedas comprenderla, inspeccionarla, modificarla y verificarla, aunque parte de su código haya sido producido por una IA.
+
+## Caso de estudio: una composición generativa interactiva
+
+Trabajarás con una composición visual generativa que dibuja un jardín radial de líneas y formas. Su apariencia depende de una semilla y de un arreglo de valores numéricos.
+
+La aplicación completa debe permitir:
+
+- regenerar la composición con una semilla;
+- cambiar la semilla con el teclado;
+- observar cambios en tiempo real;
+- producir la misma composición cuando se repiten la semilla y los parámetros;
+- conservar sus valores dentro de un intervalo válido;
+- separar la lógica generativa de la representación visual.
+
+Para trabajar, crea normalmente un proyecto nuevo de OpenFrameworks. Conserva el `main.cpp` generado por OpenFrameworks. En cada actividad recibirás el contenido de `ofApp.h` y `ofApp.cpp`; solo debes pegar esos dos archivos en el proyecto y ejecutar.
+
+La aplicación será la misma durante toda la unidad. Lo que cambiará será el contenido de esos dos archivos: primero recibirás una versión funcional, después una versión preparada para inspección y finalmente una versión con un error pequeño y observable.
+
+La estructura conceptual del sistema es:
+
+```text
+entrada del usuario → estado en memoria → regla generativa → imagen
+```
+
+La clase `ofApp` y el código repetitivo del framework forman parte del entorno. En esta unidad nos concentraremos en las funciones, los arreglos, los punteros, los parámetros y el estado que esas funciones modifican.
+
+## Pregunta de la unidad
+
+**¿Cómo se convierte una regla algorítmica en una composición visual y cómo puedo demostrar que el sistema realmente hace lo que creo?**
+
+## Modelo de trabajo
+
+<Steps>
+
+1. Ejecuta la aplicación completa y formula hipótesis sobre su comportamiento.
+2. Abre una capa del sistema y predice qué valores cambiarán.
+3. Usa el debugger para observar memoria, llamadas y estado.
+4. Modifica una regla o un requisito.
+5. Prueba de nuevo y explica qué evidencia demuestra que la modificación funciona.
+
+</Steps>
+
+<Aside type="note" title="Alcance de la unidad">
+
+No estudiaremos ensamblador x86 ni intentaremos reconstruir las instrucciones reales producidas por un compilador comercial. Conectaremos C++ con las ideas de la Unidad 2 mediante valores, direcciones, acceso indirecto, llamadas y cambios de estado.
+
+</Aside>
+
+<Aside type="tip" title="OpenFrameworks como medio">
+
+OpenFrameworks aporta la ventana, el teclado, el ciclo de actualización y el dibujo. No necesitas estudiar todavía toda la biblioteca ni la programación orientada a objetos que organiza el framework. La aplicación visual es el medio para observar el modelo de memoria.
+
+</Aside>
 
 ## Actividades
+
+Durante el aprendizaje puedes usar IA para producir alternativas, explicaciones y pruebas. La evidencia no será lo que la IA afirme, sino lo que puedas comprobar ejecutando, inspeccionando y probando el programa. No es necesario elaborar una bitácora ni un informe separado; la bitácora personal puede ayudarte a estudiar.
+
+### Actividad 01
+
+#### Primero observa el sistema completo
+
+Abre un proyecto nuevo de OpenFrameworks y pega la primera pareja de archivos `ofApp.h` y `ofApp.cpp`. No modifiques `main.cpp`.
+
+La siguiente pareja contiene una versión funcional y completa de la aplicación. Pega cada bloque en el archivo correspondiente.
+
+##### `ofApp.h`
+
+```cpp
+#pragma once
+
+#include "ofMain.h"
+
+class ofApp : public ofBaseApp {
+public:
+    void setup() override;
+    void update() override;
+    void draw() override;
+    void keyPressed(int key) override;
+
+private:
+    static constexpr int CANTIDAD = 64;
+
+    int valores[CANTIDAD]{};
+    int semilla = 7;
+    bool regenerar = true;
+    bool mostrarAyuda = true;
+
+    void generar();
+};
+```
+
+##### `ofApp.cpp`
+
+```cpp
+#include "ofApp.h"
+
+#include <cmath>
+
+void ofApp::setup() {
+    ofSetWindowShape(900, 900);
+    ofSetFrameRate(60);
+    generar();
+}
+
+void ofApp::update() {
+    if (regenerar) {
+        generar();
+        regenerar = false;
+    }
+}
+
+void ofApp::generar() {
+    int estado = semilla;
+
+    for (int i = 0; i < CANTIDAD; i++) {
+        estado = (estado * 17 + 23) % 101;
+        valores[i] = estado;
+    }
+}
+
+void ofApp::draw() {
+    ofBackground(12, 16, 28);
+
+    const float centroX = ofGetWidth() / 2.0f;
+    const float centroY = ofGetHeight() / 2.0f;
+    const float dosPi = 6.28318530718f;
+
+    for (int i = 0; i < CANTIDAD; i++) {
+        float proporcion = valores[i] / 100.0f;
+        float angulo = dosPi * static_cast<float>(i) / CANTIDAD;
+        float radio = 110.0f + 300.0f * proporcion;
+        float x = centroX + std::cos(angulo) * radio;
+        float y = centroY + std::sin(angulo) * radio;
+
+        ofSetColor(80 + (i * 160) / CANTIDAD,
+                   120 + valores[i] / 2,
+                   220);
+        ofDrawLine(centroX, centroY, x, y);
+        ofDrawCircle(x, y, 4.0f + 12.0f * proporcion);
+    }
+
+    if (mostrarAyuda) {
+        ofSetColor(245);
+        ofDrawBitmapString(
+            "r: regenerar | flechas: cambiar semilla | h: ocultar ayuda",
+            20,
+            30);
+    }
+}
+
+void ofApp::keyPressed(int key) {
+    if (key == 'r') {
+        regenerar = true;
+    }
+
+    if (key == OF_KEY_RIGHT) {
+        semilla++;
+        regenerar = true;
+    }
+
+    if (key == OF_KEY_LEFT) {
+        if (semilla > 1) {
+            semilla--;
+        }
+        regenerar = true;
+    }
+
+    if (key == 'h') {
+        mostrarAyuda = !mostrarAyuda;
+    }
+}
+```
+
+Ejecuta la versión funcional de la aplicación sin abrir todavía todos los detalles de esos dos archivos.
+
+Explora los controles disponibles y responde:
+
+- ¿Qué cambia cuando modificas la semilla?
+- ¿Qué permanece constante?
+- ¿Qué significa que la aplicación sea determinista?
+- ¿Qué parte del comportamiento parece depender de un arreglo o de una colección de valores?
+- ¿Qué requisitos funcionales y no funcionales puedes inferir?
+
+Pide a una IA que proponga una explicación de cómo podría estar construida la aplicación. No aceptes la explicación todavía: clasifica cada afirmación como hipótesis, observación o conclusión.
+
+Después compara la explicación con el código visible del caso de estudio y con el comportamiento real.
+
+**Evidencia:** una lista breve de requisitos, dos hipótesis sobre el funcionamiento y dos observaciones que puedas demostrar ejecutando la aplicación.
+
+Esta actividad introduce el Resultado específico 1 porque parte de una aplicación interactiva real y el Resultado específico 2 porque exige distinguir comportamiento observado de explicación no verificada.
+
+### Actividad 02
+
+#### La imagen nace de un arreglo
+
+Ahora reemplaza únicamente `ofApp.h` y `ofApp.cpp` por la siguiente pareja expuesta. `main.cpp` permanece igual. Esta versión separa la función generativa y las funciones de modificación para que puedas inspeccionarlas directamente.
+
+##### `ofApp.h`
+
+```cpp
+#pragma once
+
+#include "ofMain.h"
+
+constexpr int CANTIDAD = 64;
+
+void generar(int* valores, int n, int semilla);
+void variar(int* valores, int n, int delta);
+void cambiarPorValor(int semilla);
+void cambiarPorReferencia(int& semilla);
+void cambiarPorPuntero(int* semilla);
+
+class ofApp : public ofBaseApp {
+public:
+    void setup() override;
+    void update() override;
+    void draw() override;
+    void keyPressed(int key) override;
+
+private:
+    int valores[CANTIDAD]{};
+    int semilla = 7;
+    bool regenerar = true;
+    bool mostrarAyuda = true;
+};
+```
+
+##### `ofApp.cpp`
+
+```cpp
+#include "ofApp.h"
+
+#include <cmath>
+
+void generar(int* valores, int n, int semilla) {
+    int estado = semilla;
+
+    for (int i = 0; i < n; i++) {
+        estado = (estado * 17 + 23) % 101;
+        valores[i] = estado;
+    }
+}
+
+void variar(int* valores, int n, int delta) {
+    for (int i = 0; i < n; i++) {
+        valores[i] += delta;
+
+        if (valores[i] > 100) {
+            valores[i] = 100;
+        }
+
+        if (valores[i] < 0) {
+            valores[i] = 0;
+        }
+    }
+}
+
+void cambiarPorValor(int semilla) {
+    semilla++;
+}
+
+void cambiarPorReferencia(int& semilla) {
+    semilla++;
+}
+
+void cambiarPorPuntero(int* semilla) {
+    (*semilla)++;
+}
+
+void ofApp::setup() {
+    ofSetWindowShape(900, 900);
+    ofSetFrameRate(60);
+    generar(valores, CANTIDAD, semilla);
+}
+
+void ofApp::update() {
+    if (regenerar) {
+        generar(valores, CANTIDAD, semilla);
+        regenerar = false;
+    }
+}
+
+void ofApp::draw() {
+    ofBackground(12, 16, 28);
+
+    const float centroX = ofGetWidth() / 2.0f;
+    const float centroY = ofGetHeight() / 2.0f;
+    const float dosPi = 6.28318530718f;
+
+    for (int i = 0; i < CANTIDAD; i++) {
+        float proporcion = valores[i] / 100.0f;
+        float angulo = dosPi * static_cast<float>(i) / CANTIDAD;
+        float radio = 110.0f + 300.0f * proporcion;
+        float x = centroX + std::cos(angulo) * radio;
+        float y = centroY + std::sin(angulo) * radio;
+
+        ofSetColor(80 + (i * 160) / CANTIDAD,
+                   120 + valores[i] / 2,
+                   220);
+        ofDrawLine(centroX, centroY, x, y);
+        ofDrawCircle(x, y, 4.0f + 12.0f * proporcion);
+    }
+
+    if (mostrarAyuda) {
+        ofSetColor(245);
+        ofDrawBitmapString(
+            "r: regenerar | flechas: semilla | a/p/v: parametros +/-: variar",
+            20,
+            30);
+    }
+}
+
+void ofApp::keyPressed(int key) {
+    if (key == 'r') {
+        regenerar = true;
+    }
+
+    if (key == OF_KEY_RIGHT) {
+        semilla++;
+        regenerar = true;
+    }
+
+    if (key == OF_KEY_LEFT) {
+        if (semilla > 1) {
+            semilla--;
+        }
+        regenerar = true;
+    }
+
+    if (key == 'a') {
+        cambiarPorReferencia(semilla);
+        regenerar = true;
+    }
+
+    if (key == 'p') {
+        cambiarPorPuntero(&semilla);
+        regenerar = true;
+    }
+
+    if (key == 'v') {
+        cambiarPorValor(semilla);
+        regenerar = true;
+    }
+
+    if (key == '+') {
+        variar(valores, CANTIDAD, 5);
+    }
+
+    if (key == '-') {
+        variar(valores, CANTIDAD, -5);
+    }
+
+    if (key == 'h') {
+        mostrarAyuda = !mostrarAyuda;
+    }
+}
+```
+
+Antes de ejecutar:
+
+- calcula los primeros valores producidos por `generar(valores, 8, 7)`;
+- explica qué representa `valores` dentro de la función;
+- relaciona `valores[i]`, `&valores[0]`, `valores + i` y `*(valores + i)`;
+- predice qué ocurre cuando `n` vale `0`.
+
+En el debugger observa el arreglo completo, la dirección de su primer elemento y el desplazamiento usado en cada iteración. Presiona `A`, `P` y `V` para comparar las tres formas de pasar la semilla; solo dos de ellas deben modificar la semilla del programa.
+
+La composición visual es una interpretación de esos valores. Si cambia un dato del arreglo, cambia la imagen; la imagen no reemplaza al estado almacenado en memoria.
+
+**Evidencia:** una tabla que relacione índice, dirección simbólica, contenido y efecto visual.
+
+### Actividad 03
+
+#### Una función puede modificar o no el estado original
+
+Analiza tres funciones utilizadas para cambiar la semilla:
+
+```cpp
+void cambiarPorValor(int semilla) {
+    semilla = semilla + 1;
+}
+
+void cambiarPorReferencia(int& semilla) {
+    semilla = semilla + 1;
+}
+
+void cambiarPorPuntero(int* semilla) {
+    *semilla = *semilla + 1;
+}
+```
+
+Antes de ejecutar, predice el valor de la semilla dentro de la función y después del retorno. Luego usa el debugger para observar:
+
+- el parámetro en el contexto de la función;
+- la variable original en el contexto del llamador;
+- qué dirección contiene el puntero;
+- qué cambia después de regenerar la composición.
+
+Responde:
+
+- ¿Cuál función trabaja con una copia?
+- ¿Cuál modifica el objeto original?
+- ¿Qué contiene el parámetro de la tercera función?
+- ¿Por qué una referencia debe entenderse como un alias semántico y no simplemente como “un puntero con otro nombre”?
+
+Modifica una función para que la semilla pueda restablecerse a un valor elegido por el usuario.
+
+**Evidencia:** una predicción, una observación del estado dentro y fuera de la función y una modificación pequeña justificada.
+
+### Actividad 04
+
+#### El sistema interactivo conserva estado entre cuadros
+
+Continúa usando la pareja expuesta de la Actividad 02. La aplicación no se ejecuta una sola vez: OpenFrameworks llama repetidamente a `update()` y `draw()`. En `ofApp.cpp`, el caso de estudio utiliza esta estructura:
+
+```cpp
+void ofApp::keyPressed(int key) {
+    if (key == 'r') {
+        regenerar = true;
+    }
+
+    if (key == OF_KEY_RIGHT) {
+        semilla++;
+        regenerar = true;
+    }
+}
+
+void ofApp::update() {
+    if (regenerar) {
+        generar(valores, CANTIDAD, semilla);
+        regenerar = false;
+    }
+}
+```
+
+La representación visual puede resumirse así:
+
+```cpp
+void ofApp::draw() {
+    ofBackground(12);
+    ofPushMatrix();
+    ofTranslate(ofGetWidth() / 2, ofGetHeight() / 2);
+
+    for (int i = 0; i < CANTIDAD; i++) {
+        float angulo = i * 2 * PI / CANTIDAD;
+        float radio = 100 + valores[i] * 2;
+
+        ofSetColor(100 + valores[i], 100, 220);
+        ofDrawLine(0, 0, cos(angulo) * radio, sin(angulo) * radio);
+    }
+
+    ofPopMatrix();
+}
+```
+
+Experimenta con estas preguntas:
+
+- ¿Qué ocurre si `generar()` se ejecuta en cada cuadro?
+- ¿Qué estado cambia cuando presionas `r`?
+- ¿Qué parte del programa corresponde a entrada, actualización y representación?
+- ¿Dónde se almacenan `semilla` y los valores de la composición?
+- ¿Por qué la misma semilla debe producir la misma composición?
+
+Detente dentro de `update()` y sigue una regeneración completa. No necesitas estudiar la implementación de `ofApp`; úsala como el contexto que permite observar un sistema interactivo en tiempo real.
+
+**Evidencia:** una explicación del ciclo `entrada → estado → actualización → imagen` y una predicción de qué cambia después de dos interacciones distintas.
+
+### Actividad 05
+
+#### Audita, modifica y prueba el caso de estudio
+
+Ahora reemplaza únicamente `ofApp.h` y `ofApp.cpp` por la pareja de desafío. `main.cpp` permanece igual. Esta versión funciona, pero contiene un error que no siempre es visible en la primera ejecución.
+
+##### `ofApp.h`
+
+```cpp
+#pragma once
+
+#include "ofMain.h"
+
+constexpr int CANTIDAD = 64;
+
+void generar(int* valores, int n, int semilla);
+void variar(int* valores, int n, int delta);
+void cambiarPorValor(int semilla);
+void cambiarPorReferencia(int& semilla);
+void cambiarPorPuntero(int* semilla);
+
+class ofApp : public ofBaseApp {
+public:
+    void setup() override;
+    void update() override;
+    void draw() override;
+    void keyPressed(int key) override;
+
+private:
+    int valores[CANTIDAD]{};
+    int semilla = 7;
+    bool regenerar = true;
+    bool mostrarAyuda = true;
+};
+```
+
+##### `ofApp.cpp`
+
+```cpp
+#include "ofApp.h"
+
+#include <cmath>
+
+void generar(int* valores, int n, int semilla) {
+    int estado = semilla;
+
+    for (int i = 0; i < n; i++) {
+        estado = (estado * 17 + 23) % 101;
+        valores[i] = estado;
+    }
+}
+
+void variar(int* valores, int n, int delta) {
+    for (int i = 0; i < n; i++) {
+        valores[i] += delta;
+
+        if (valores[i] > 100) {
+            valores[i] = 100;
+        }
+    }
+}
+
+void cambiarPorValor(int semilla) {
+    semilla++;
+}
+
+void cambiarPorReferencia(int& semilla) {
+    semilla++;
+}
+
+void cambiarPorPuntero(int* semilla) {
+    (*semilla)++;
+}
+
+void ofApp::setup() {
+    ofSetWindowShape(900, 900);
+    ofSetFrameRate(60);
+    generar(valores, CANTIDAD, semilla);
+}
+
+void ofApp::update() {
+    if (regenerar) {
+        generar(valores, CANTIDAD, semilla);
+        regenerar = false;
+    }
+}
+
+void ofApp::draw() {
+    ofBackground(12, 16, 28);
+
+    const float centroX = ofGetWidth() / 2.0f;
+    const float centroY = ofGetHeight() / 2.0f;
+    const float dosPi = 6.28318530718f;
+
+    for (int i = 0; i < CANTIDAD; i++) {
+        float proporcion = valores[i] / 100.0f;
+        float angulo = dosPi * static_cast<float>(i) / CANTIDAD;
+        float radio = 110.0f + 300.0f * proporcion;
+        float x = centroX + std::cos(angulo) * radio;
+        float y = centroY + std::sin(angulo) * radio;
+
+        ofSetColor(80 + (i * 160) / CANTIDAD,
+                   120 + valores[i] / 2,
+                   220);
+        ofDrawLine(centroX, centroY, x, y);
+        ofDrawCircle(x, y, 4.0f + 12.0f * proporcion);
+    }
+
+    if (mostrarAyuda) {
+        ofSetColor(245);
+        ofDrawBitmapString(
+            "r: regenerar | flechas: semilla | a/p/v: parametros | +/-: variar",
+            20,
+            30);
+    }
+}
+
+void ofApp::keyPressed(int key) {
+    if (key == 'r') {
+        regenerar = true;
+    }
+
+    if (key == OF_KEY_RIGHT) {
+        semilla++;
+        regenerar = true;
+    }
+
+    if (key == OF_KEY_LEFT) {
+        if (semilla > 1) {
+            semilla--;
+        }
+        regenerar = true;
+    }
+
+    if (key == 'a') {
+        cambiarPorReferencia(semilla);
+        regenerar = true;
+    }
+
+    if (key == 'p') {
+        cambiarPorPuntero(&semilla);
+        regenerar = true;
+    }
+
+    if (key == 'v') {
+        cambiarPorValor(semilla);
+        regenerar = true;
+    }
+
+    if (key == '+') {
+        variar(valores, CANTIDAD, 5);
+    }
+
+    if (key == '-') {
+        variar(valores, CANTIDAD, -5);
+    }
+
+    if (key == 'h') {
+        mostrarAyuda = !mostrarAyuda;
+    }
+}
+```
+
+La IA propone esta función para variar los valores de la composición. Es exactamente la función `variar` que aparece en la pareja de desafío:
+
+```cpp
+void variar(int* valores, int n, int delta) {
+    for (int i = 0; i < n; i++) {
+        valores[i] += delta;
+
+        if (valores[i] > 100) {
+            valores[i] = 100;
+        }
+    }
+}
+```
+
+El requisito es conservar todos los valores entre `0` y `100`.
+
+Tu tarea es:
+
+1. predecir qué ocurre con valores cercanos al límite inferior;
+2. ejecutar la aplicación y observar el estado en el debugger;
+3. construir una prueba que revele el problema;
+4. corregir la función;
+5. modificar una regla visual sin romper los requisitos;
+6. probar partes y funcionamiento completo.
+
+Pide a la IA dos soluciones alternativas y una propuesta de pruebas. Compara sus decisiones con tu código y con los resultados observados. La pregunta central es:
+
+> ¿Cómo sé que la solución producida por la IA es correcta?
+
+Prueba como mínimo:
+
+- semilla repetida;
+- dos semillas diferentes;
+- tamaño cero;
+- valores en el límite inferior;
+- valores en el límite superior;
+- variación positiva y negativa;
+- regeneración después de una interacción del usuario.
+
+La calidad artística de la composición es importante como motivación, pero no reemplaza la explicación técnica. Debes poder explicar qué datos se almacenan, qué función los modifica y qué evidencia demuestra que la aplicación cumple sus requisitos.
+
+Esta actividad integra los dos resultados específicos: construyes y modificas una aplicación interactiva, y aplicas pruebas de sus partes y de su funcionamiento completo.
+
+### Actividad 06
+
+#### Evaluación escrita de la unidad
+
+La evaluación será individual, escrita y sin computador, celular, apuntes ni herramientas de IA.
+
+Puede incluir problemas nuevos y fragmentos autocontenidos sobre:
+
+- predicción del estado de un arreglo y una variable durante una ejecución;
+- representación de valores, direcciones y desplazamientos;
+- diferencia entre paso por valor, referencia y puntero;
+- relación entre una función y el estado que modifica;
+- diagnóstico de un error de límites, aliasing o duración;
+- modificación pequeña de una función;
+- diseño de pruebas para verificar una regla generativa o un requisito interactivo.
+
+No se evaluará la memorización de la API de OpenFrameworks ni la reproducción de una composición visual. La evaluación comprobará que puedas comprender, decidir, modificar y probar un sistema aunque no hayas escrito manualmente todo su código.
+
+Antes de la evaluación, asegúrate de poder explicar con tus propias palabras qué contiene una variable, qué contiene un puntero, qué cambia durante una llamada a función y qué evidencia demuestra que una prueba es suficiente.

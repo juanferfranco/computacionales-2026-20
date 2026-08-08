@@ -35,8 +35,8 @@ export default defineConfig({
 					items: [
 						// Each item here is one entry in the navigation menu.
 						{ label: 'Unidad 1', slug: 'units/unit1' },
-						{ label: 'Unidad 2', slug: 'units/unit2', badge: 'New'},
-						{ label: 'Unidad 3', slug: 'units/unit3' },
+						{ label: 'Unidad 2', slug: 'units/unit2'},
+						{ label: 'Unidad 3', slug: 'units/unit3', badge: 'New' },
 						{ label: 'Unidad 4', slug: 'units/unit4' },
 						{ label: 'Unidad 5', slug: 'units/unit5' },
 						{ label: 'Unidad 6', slug: 'units/unit6' },
