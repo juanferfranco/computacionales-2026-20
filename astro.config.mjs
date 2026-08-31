@@ -1,16 +1,10 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import remarkMath from 'remark-math';
-import rehypeMathjax from 'rehype-mathjax';
 
 // https://astro.build/config
 export default defineConfig({
 	base: '/computacionales-2026-20',
-	markdown: {
-		remarkPlugins: [remarkMath],
-		rehypePlugins: [rehypeMathjax],
-	},
 	integrations: [
 		starlight({
 			title: 'Sistemas Computacionales',
@@ -53,5 +47,5 @@ export default defineConfig({
 			],
 		}),
 	],
-	site: 'https://jfUPB.github.io'
+	site: 'https://juanferfranco.github.io'
 });
