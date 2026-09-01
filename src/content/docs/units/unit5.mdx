@@ -5,11 +5,21 @@ unitId: unit5
 
 ## Propósito
 
-En esta unidad vamos a profundizar en los principios fundamentales de la Programación Orientada a Objetos (OOP) usando C++. No solo usarás la herencia, el polimorfismo y el encapsulamiento: también observarás cómo funcionan por dentro, “bajo el capó”. Usaremos un caso de estudio de fuegos artificiales construido con openFrameworks para analizar, con el depurador, cómo se organizan los objetos en memoria, cómo se implementa la tabla de funciones virtuales (_vtable_) y cómo se despacha dinámicamente el polimorfismo en tiempo de ejecución.
+En esta unidad vas a profundizar en los principios fundamentales de la Programación 
+Orientada a Objetos (OOP) usando C++. No solo usarás la herencia, el polimorfismo 
+y el encapsulamiento: también observarás cómo funcionan por dentro, “bajo el capó”. 
+Usaremos un caso de estudio de fuegos artificiales construido con openFrameworks 
+para analizar, con el depurador, cómo se organizan los objetos en memoria, cómo se 
+implementa la tabla de funciones virtuales (_vtable_) y cómo se despacha dinámicamente 
+el polimorfismo en tiempo de ejecución.
 
 ## Actividades
 
-En estas actividades trabajaremos juntos en clase. Yo te propondré preguntas, experimentos y modificaciones; tú formularás hipótesis, ejecutarás el código, observarás lo que ocurre y explicarás tus conclusiones. Las respuestas, capturas, dibujos y pruebas las construiremos y revisaremos durante la clase; no necesitas preparar un documento separado.
+En estas actividades trabajaremos juntos en clase. Yo te propondré preguntas, experimentos 
+y modificaciones; tú formularás hipótesis, ejecutarás el código, observarás lo 
+que ocurre y explicarás tus conclusiones. Las respuestas, capturas, dibujos y 
+pruebas las construiremos y revisaremos durante la clase; puedes usar tu bitácora 
+personal para registrar tus observaciones y conclusiones.
 
 ### Actividad 01
 
@@ -33,13 +43,7 @@ using System.Collections.Generic;
 
 public abstract class Figura
 {
-    private string nombre;
-
-    public string Nombre
-    {
-        get { return nombre; }
-        protected set { nombre = value; }
-    }
+    public string Nombre{get; protected set;}
 
     public Figura(string nombre)
     {
@@ -117,11 +121,13 @@ Ahora responde estas preguntas sobre el código:
 
 **Parte 3: formulemos hipótesis sobre la implementación**
 
-Imagina que eres un diseñador de lenguajes de programación y tienes que decidir cómo implementar estos conceptos en la memoria y en el procesador. No hay respuestas incorrectas en esta parte; lo importante es que expliques tus ideas. Dibuja si te ayuda.
+Imagina que eres un diseñador de lenguajes de programación y tienes que decidir cómo }
+implementar estos conceptos. No hay respuestas incorrectas en esta parte; lo importante es 
+que expliques tus ideas. Dibuja si te ayuda.
 
 1. **Memoria y herencia:** cuando creas un objeto `Rectangulo`, este tiene `Base`, `Altura` y también `Nombre`. ¿Cómo imaginas que se organizan esos tres datos en la memoria del computador para formar un solo objeto?
 2. **El mecanismo del polimorfismo:** pensemos de nuevo en la llamada `fig.Dibujar()`. El compilador solo sabe que `fig` es una `Figura`. ¿Cómo decide el programa, mientras se está ejecutando, si debe llamar al `Dibujar` del `Circulo` o al del `Rectangulo`?
-3. **La barrera del encapsulamiento:** ¿cómo crees que el compilador logra que no puedas acceder a un miembro `private` desde fuera de la clase? ¿Es algo que se revisa cuando escribes el código o una protección que existe mientras el programa se ejecuta? ¿Por qué piensas eso?
+3. **La barrera del encapsulamiento:** ¿Cómo crees que el compilador logra que no puedas acceder a un miembro `private` desde fuera de la clase? ¿Es algo que se revisa cuando escribes el código o una protección que existe mientras el programa se ejecuta? ¿Por qué piensas eso?
 
 **Parte 4: reflexión y preparación**
 
@@ -417,7 +423,7 @@ En clase toma capturas de algunos estados de la aplicación y explícame qué ev
 
 #### Objetos en memoria y la _vtable_
 
-Ahora vamos a analizar juntos el caso de estudio con el depurador. La pregunta que guiará esta actividad es: ¿cómo se ve un objeto de C++ en la memoria?
+Ahora vamos a analizar juntos el caso de estudio con el depurador. La pregunta que guiará esta actividad es: ¿Cómo se ve un objeto de C++ en la memoria?
 
 Usa el depurador para encontrar la instancia de la clase `ofApp`. Recuerda que el objeto solo estará en memoria mientras la aplicación esté corriendo.
 
@@ -446,7 +452,7 @@ Ahora usa de nuevo el depurador para capturar un objeto de tipo `CircularExplosi
 
 **Concepto de los métodos virtuales:** observa de nuevo en memoria un objeto de tipo `CircularExplosion`. El primer campo en memoria del objeto es un `ExplosionParticle`. Abre `ExplosionParticle` y observa que el primer campo es un `Particle`. Abre `Particle` y observa que el primer campo es `_vtable`. Ese es un puntero a la tabla de funciones virtuales.
 
-Captura la `_vtable` de un objeto `CircularExplosion` y muéstramela en clase. Observa detenidamente la tabla de funciones: ¿qué puedes ver?
+Captura la `_vtable` de un objeto `CircularExplosion` y muéstramela en clase. Observa detenidamente la tabla de funciones: ¿Qué puedes ver?
 
 Este es un ejemplo de cómo se puede ver la tabla de funciones:
 
