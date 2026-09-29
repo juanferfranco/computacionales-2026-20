@@ -5,6 +5,393 @@ unitId: unit7
 
 ## Propósito
 
-Hacer una introducción práctica a la programación gráfica moderna con OpenGL. En esta unidad usarás como caso de estudio el ejemplo del triángulo simple para entrar al pipeline programable, entender cómo fluye la información desde el CPU hasta la GPU y observar cómo shaders, buffers y estado gráfico colaboran para producir una imagen.
+En esta unidad usarás un triángulo en OpenGL moderno para comprender cómo una
+aplicación produce una imagen. Seguiremos el recorrido de los datos desde C++
+hasta la GPU: creación del contexto, carga de funciones, configuración de
+vértices, ejecución de shaders y presentación del resultado. Al terminar,
+deberías poder explicar por qué aparece una imagen y diagnosticar qué parte
+del recorrido revisarías si no aparece o se ve distinta de lo esperado.
 
 ## Actividades
+
+En las dos primeras sesiones analizaremos juntos un ejemplo funcional. En la
+tercera ampliarás ese ejemplo con apoyo de IA y estudiarás la solución hasta
+poder explicarla y modificarla. La cuarta sesión será la evaluación escrita,
+individual y sin materiales de consulta, según las condiciones del curso.
+
+Puedes registrar preguntas, hipótesis, pruebas y conclusiones en tu bitácora
+personal para preparar la evaluación. La aplicación y la bitácora servirán como
+material de aprendizaje; la nota de la unidad provendrá de la evaluación
+escrita.
+
+### Actividad 01: demostración del triángulo
+
+El profesor abrirá y ejecutará el [ejemplo del triángulo](https://github.com/juanferfranco/triangle.git).
+Antes de recorrer el código, observa el resultado y propón una explicación:
+¿qué información necesita la aplicación para dibujarlo?, ¿qué trabajo ocurre
+en C++ y qué trabajo ocurre en la GPU?
+
+Durante la demostración identificaremos los archivos principales, la ventana,
+el ciclo de renderizado y las llamadas que preparan y dibujan el triángulo. No
+necesitas crear un proyecto OpenGL desde cero. Si puedes ejecutar el ejemplo
+en tu equipo, úsalo durante las actividades siguientes; si la configuración
+del equipo lo impide, podrás seguir el análisis con la demostración de clase.
+
+### Actividad 02: del programa al primer píxel
+
+Construiremos en el tablero un mapa de las piezas que permiten que funcione
+la aplicación:
+
+1. **GLFW** crea la ventana y el contexto OpenGL y recibe eventos.
+2. **`opengl32.lib`** participa en el enlace de la API de OpenGL disponible
+   directamente en Windows.
+3. **GLAD** carga, con un contexto activo, las funciones modernas que expone
+   el controlador gráfico.
+4. **El controlador de la GPU** implementa las operaciones gráficas que usa la
+   aplicación.
+5. **GLM**, cuando el programa la utiliza, aporta operaciones matemáticas con
+   vectores y matrices; no crea el contexto ni dibuja por sí sola.
+
+Seguiremos el orden de inicialización en el ejemplo y distinguiremos lo que
+se necesita al compilar, enlazar y ejecutar. El profesor mostrará cómo se
+relacionan las cabeceras, los archivos fuente, las bibliotecas y las DLL del
+proyecto. La configuración detallada de Visual Studio será una referencia
+para quien necesite resolver un problema de entorno, no una tarea de
+instalación para todos.
+
+**Pregunta de comprobación:** si la ventana se crea pero una función moderna
+de OpenGL no está disponible, ¿qué parte de la secuencia revisarías y por qué?
+
+### Actividad 03: contexto, inicialización y ciclo de renderizado
+
+Recorreremos juntos la primera parte del código del triángulo. Antes de
+ejecutar cada sección importante, anticipa qué cambiaría si se omitiera o se
+moviera de lugar; después contrasta tu hipótesis con el código y el resultado.
+
+Nos concentraremos en estas relaciones:
+
+- Ventana, contexto activo y carga de funciones con GLAD.
+- Preparación que ocurre una vez y comandos que se repiten en cada cuadro.
+- Limpieza del framebuffer, selección del programa y del VAO, llamada de
+  dibujo, intercambio de buffers y procesamiento de eventos.
+- Liberación de recursos al terminar.
+
+**Preguntas para discutir:** ¿por qué GLAD se carga después de activar el
+contexto?, ¿qué hace que el triángulo siga visible cuadro tras cuadro?, ¿qué
+esperas ver si se omite la llamada de dibujo o el intercambio de buffers?
+
+### Actividad 04: datos de vértices y shaders
+
+Seguiremos un dato concreto: una coordenada del arreglo de C++ hasta la
+posición que recibe el vertex shader. En el tablero relacionaremos el arreglo,
+el VBO, la configuración de atributos guardada por el VAO, la ubicación
+`layout(location = ...)` del shader y la llamada de dibujo. Después seguiremos el
+resultado hasta el fragment shader y el color que aparece en pantalla.
+
+Haremos pequeñas predicciones antes de probar cambios en el ejemplo: alterar
+una coordenada, cambiar el color que escribe el fragment shader y modificar
+una ubicación de atributo. En cada caso explicaremos qué parte del recorrido
+se modificó y cuál quedó igual.
+
+**Preguntas para discutir:** ¿qué contiene el VBO y qué configuración recuerda
+el VAO?, ¿por qué el shader debe recibir los datos en la ubicación esperada?,
+¿qué diferencia hay entre el trabajo del vertex shader y el del fragment
+shader?
+
+### Actividad 05: interacción mediante uniforms
+
+En esta actividad observarás cómo el mouse cambia la posición y el color del
+triángulo. **No tienes que construir la aplicación desde cero.** Abre el
+proyecto del triángulo simple ya configurado, reemplaza **todo el contenido de
+`triangle.cpp`** por el siguiente archivo, compila y ejecuta. Los dos shaders
+están incluidos como cadenas dentro del mismo archivo: no necesitas crear
+otros archivos ni cambiar la configuración del proyecto. La configuración
+proporcionada enlaza `glfw3.lib` de forma estática; no necesitas copiar
+`glfw3.dll` junto al ejecutable.
+
+```cpp
+#include <iostream>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+const unsigned int SCR_WIDTH = 400;
+const unsigned int SCR_HEIGHT = 400;
+
+unsigned int VAO = 0, VBO = 0, shaderProg = 0;
+
+const char* vertexShaderSrc = R"glsl(
+    #version 460 core
+    layout(location = 0) in vec3 aPos;
+    uniform vec2 offset;
+
+    void main() {
+        gl_Position = vec4(aPos.xy + offset, aPos.z, 1.0);
+    }
+)glsl";
+
+const char* fragmentShaderSrc = R"glsl(
+    #version 460 core
+    out vec4 FragColor;
+    uniform vec4 ourColor;
+
+    void main() {
+        FragColor = ourColor;
+    }
+)glsl";
+
+void framebuffer_size_callback(GLFWwindow*, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
+void processInput(GLFWwindow* window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+}
+
+float clamp01(float value) {
+    if (value < 0.0f) return 0.0f;
+    if (value > 1.0f) return 1.0f;
+    return value;
+}
+
+unsigned int buildShaderProgram() {
+    int success = 0;
+    char log[512];
+
+    unsigned int vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vertexShaderSrc, nullptr);
+    glCompileShader(vs);
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vs, 512, nullptr, log);
+        std::cerr << "ERROR VERTEX SHADER:\n" << log << '\n';
+        glDeleteShader(vs);
+        return 0;
+    }
+
+    unsigned int fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fragmentShaderSrc, nullptr);
+    glCompileShader(fs);
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fs, 512, nullptr, log);
+        std::cerr << "ERROR FRAGMENT SHADER:\n" << log << '\n';
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+        return 0;
+    }
+
+    unsigned int program = glCreateProgram();
+    glAttachShader(program, vs);
+    glAttachShader(program, fs);
+    glLinkProgram(program);
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+    if (!success) {
+        glGetProgramInfoLog(program, 512, nullptr, log);
+        std::cerr << "ERROR LINKING PROGRAM:\n" << log << '\n';
+        glDeleteProgram(program);
+        return 0;
+    }
+    return program;
+}
+
+void setupTriangle() {
+    const float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
+    };
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+                          3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+}
+
+int main() {
+    if (!glfwInit()) {
+        std::cerr << "Fallo al inicializar GLFW\n";
+        return -1;
+    }
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* mainWindow = glfwCreateWindow(
+        SCR_WIDTH, SCR_HEIGHT, "Triangulo interactivo", nullptr, nullptr);
+    if (!mainWindow) {
+        std::cerr << "No se pudo crear la ventana OpenGL 4.6\n";
+        glfwTerminate();
+        return -1;
+    }
+
+    glfwMakeContextCurrent(mainWindow);
+    glfwSetFramebufferSizeCallback(mainWindow, framebuffer_size_callback);
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Fallo al cargar GLAD\n";
+        glfwDestroyWindow(mainWindow);
+        glfwTerminate();
+        return -1;
+    }
+
+    int bufferWidth = 0, bufferHeight = 0;
+    glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+    glViewport(0, 0, bufferWidth, bufferHeight);
+    glfwSwapInterval(1);
+
+    shaderProg = buildShaderProgram();
+    if (shaderProg == 0) {
+        glfwDestroyWindow(mainWindow);
+        glfwTerminate();
+        return -1;
+    }
+    setupTriangle();
+
+    const int offsetLocation = glGetUniformLocation(shaderProg, "offset");
+    const int colorLocation = glGetUniformLocation(shaderProg, "ourColor");
+    if (offsetLocation == -1 || colorLocation == -1) {
+        std::cerr << "No se encontro un uniform del programa\n";
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
+        glDeleteProgram(shaderProg);
+        glfwDestroyWindow(mainWindow);
+        glfwTerminate();
+        return -1;
+    }
+
+    while (!glfwWindowShouldClose(mainWindow)) {
+        glfwPollEvents();
+        processInput(mainWindow);
+
+        double mouseX = 0.0, mouseY = 0.0;
+        glfwGetCursorPos(mainWindow, &mouseX, &mouseY);
+        int windowWidth = 0, windowHeight = 0;
+        glfwGetWindowSize(mainWindow, &windowWidth, &windowHeight);
+
+        float x01 = 0.5f, y01 = 0.5f;
+        if (windowWidth > 0 && windowHeight > 0) {
+            x01 = clamp01(static_cast<float>(mouseX / windowWidth));
+            y01 = clamp01(static_cast<float>(mouseY / windowHeight));
+        }
+
+        // El origen del mouse esta arriba; el eje Y de NDC apunta arriba.
+        // El offset va de -0.5 a 0.5 para conservar el triangulo en pantalla.
+        const float offsetX = x01 - 0.5f;
+        const float offsetY = 0.5f - y01;
+
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(shaderProg);
+        glUniform2f(offsetLocation, offsetX, offsetY);
+        glUniform4f(colorLocation, x01, y01, 1.0f - x01, 1.0f);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glfwSwapBuffers(mainWindow);
+    }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProg);
+    glfwDestroyWindow(mainWindow);
+    glfwTerminate();
+    return 0;
+}
+```
+
+Mueve el mouse dentro de la ventana. Debes ver que el triángulo cambia de
+posición y que todo el triángulo adopta un nuevo color. `Esc` cierra la
+aplicación. Si el proyecto compila pero no abre, revisa primero los mensajes
+de error: por ejemplo, el equipo podría no admitir el contexto OpenGL 4.6
+que solicita este ejemplo.
+
+**¿Qué hace el código?** Un `uniform` es un valor que C++ envía al programa de
+shaders y que se mantiene constante durante una llamada de dibujo. Aquí
+`offset` se usa en el vertex shader para sumar el mismo desplazamiento a los
+tres vértices. `ourColor` se usa en el fragment shader para asignar un único
+color a todos los fragmentos del triángulo. Los valores se actualizan después
+de `glUseProgram` y antes de `glDrawArrays`. Las ubicaciones de ambos
+`uniforms` se consultan una sola vez, después de enlazar el programa.
+
+Las coordenadas del mouse comienzan en la esquina superior izquierda de la
+ventana. Dividir `mouseX` y `mouseY` por el ancho y alto **actuales** produce
+`x01` y `y01` entre 0 y 1. `clamp01` limita los valores si el cursor sale de
+la ventana. Para el desplazamiento horizontal usamos `x01 - 0.5`; para el
+vertical, `0.5 - y01`, que invierte el eje Y. Así el desplazamiento queda
+entre -0.5 y 0.5 dentro del espacio de coordenadas de dispositivo
+normalizadas (NDC). El color usa `x01` como componente roja, `y01` como verde
+y `1 - x01` como azul.
+
+El VBO sigue conteniendo las tres posiciones originales. Mover el mouse no
+vuelve a cargar el VBO: solo cambia los `uniforms` usados en el siguiente
+dibujo. Un atributo, en cambio, puede tener un valor diferente para cada
+vértice; esa será una diferencia importante en la actividad 6.
+
+**Para analizar en clase:** ubica en el archivo las líneas donde C++ lee el
+mouse, normaliza sus coordenadas, activa el programa y envía cada `uniform`.
+Predice qué ocurriría si comentaras `glUniform2f` y, por separado, si
+comentaras `glUniform4f`. Contrasta tus predicciones con la aplicación.
+
+**Pregunta de comprobación:** si el triángulo se mueve pero conserva su
+geometría, ¿qué dato cambió, dónde se actualizó y por qué no hubo que volver
+a definir todos los vértices?
+
+### Actividad 06: ampliar el triángulo con ayuda de IA
+
+Partirás del `triangle.cpp` funcional de la actividad 5; puedes usar IA generativa para proponer,
+escribir y depurar una ampliación. El objetivo es que puedas **leer,
+comprobar, explicar y modificar** la solución que finalmente uses.
+
+La ampliación debe cumplir estas condiciones:
+
+1. Incorporar un **color diferente por vértice**, enviado desde C++ como un
+   nuevo atributo. El triángulo debe mostrar una transición de color producida
+   a partir de esos datos.
+2. Mantener al menos un **cambio controlado por un `uniform`** que dependa del
+   tiempo o de la entrada del usuario. Puede afectar la posición, el color u
+   otra propiedad visible.
+3. Poder señalar en el código dónde se preparan los datos, dónde se configura
+   el nuevo atributo, dónde se actualiza el `uniform` y cómo intervienen los
+   shaders en el resultado.
+
+Puedes pedirle a la IA que te explique una función, que proponga un cambio
+pequeño o que te ayude a interpretar un error. Comprueba sus propuestas
+compilando y observando la aplicación. Si una respuesta introduce funciones,
+archivos o conceptos que no entiendes, investígalos antes de conservarlos.
+
+Para estudiar tu solución, prepara estas pruebas y explicaciones en tu
+bitácora personal:
+
+- Dibuja el recorrido de **un color de vértice** desde el arreglo de C++ hasta
+  el color final de los fragmentos. Señala el papel del VBO, el VAO y ambos
+  shaders.
+- Localiza el `uniform`, indica cuándo se actualiza y explica por qué ese dato
+  no se envía como atributo de vértice.
+- Cambia deliberadamente un valor del atributo y uno del `uniform`. Predice
+  el efecto de cada cambio, ejecútalo y compara el resultado con tu predicción.
+- Identifica una decisión o una línea sugerida por la IA que tuviste que
+  corregir o que verificaste por tu cuenta. Explica cómo comprobaste que era
+  adecuada.
+
+Al finalizar, otra persona debería poder pedirte que cambies un color, que
+identifiques la causa de un desplazamiento o que expliques por qué desaparece
+el triángulo si se desconfigura un atributo. Usa esas preguntas para ensayar
+antes de la evaluación.
+
+### Actividad 07: evaluación
+
+La evaluación será escrita, individual y presencial. Incluirá lectura de
+fragmentos de C++ y GLSL, predicción de resultados, diagnóstico de fallos y
+explicación del recorrido de los datos. También podrá pedirte justificar
+cuándo usar un atributo o un `uniform` y cómo interactúan GLFW, GLAD, el
+contexto y el controlador gráfico.
+
+No tendrás acceso al computador, celular, apuntes, bitácora ni otros
+materiales de consulta durante la evaluación.
