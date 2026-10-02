@@ -14,15 +14,26 @@ del recorrido revisarías si no aparece o se ve distinta de lo esperado.
 
 ## Actividades
 
-En las dos primeras sesiones analizaremos juntos un ejemplo funcional. En la
-tercera ampliarás ese ejemplo con apoyo de IA y estudiarás la solución hasta
-poder explicarla y modificarla. La cuarta sesión será la evaluación escrita,
-individual y sin materiales de consulta, según las condiciones del curso.
+Trabajaremos durante cuatro sesiones. Las preguntas y los experimentos de las
+actividades son oportunidades para explorar los conceptos. Habrá una única
+entrega al cierre de la unidad, descrita en la actividad 7.
 
-Puedes registrar preguntas, hipótesis, pruebas y conclusiones en tu bitácora
-personal para preparar la evaluación. La aplicación y la bitácora servirán como
-material de aprendizaje; la nota de la unidad provendrá de la evaluación
-escrita.
+| Sesión | Qué haremos | Actividades |
+| --- | --- | --- |
+| 1. Encontrarse con el sistema | Ejecutar el triángulo y construir un mapa de las piezas que permiten producir la imagen. | 1 y 2. |
+| 2. Abrir y experimentar | Seguir los datos, hacer pequeños cambios y contrastar los resultados con nuestras predicciones. | 3, 4 y 5. |
+| 3. Intervenir el sistema | Ampliar el triángulo y comenzar las pruebas de la modificación. | 6. |
+| 4. Probar y cerrar | Completar las pruebas, preparar la entrega y solicitar retroalimentación si la necesitas. | 7. |
+
+Puedes usar IA, documentación y apoyo de compañeros durante las cuatro
+sesiones. Tu bitácora personal es opcional: puedes registrar preguntas,
+hipótesis y resultados para volver sobre ellos. Las actividades 1 a 5 no
+requieren entregas separadas.
+
+El profesor presentará los conceptos y propondrá exploraciones. Si quieres
+retroalimentación sobre tu trabajo, señala qué intentaste, qué resultado
+obtuviste y qué pregunta o decisión quieres revisar. Tú decides cómo
+aprovechar estas oportunidades y qué necesitas seguir estudiando.
 
 ### Actividad 01: demostración del triángulo
 
@@ -345,9 +356,10 @@ a definir todos los vértices?
 
 ### Actividad 06: ampliar el triángulo con ayuda de IA
 
-Partirás del `triangle.cpp` funcional de la actividad 5; puedes usar IA generativa para proponer,
-escribir y depurar una ampliación. El objetivo es que puedas **leer,
-comprobar, explicar y modificar** la solución que finalmente uses.
+Partirás del `triangle.cpp` funcional de la actividad 5. Puedes usar IA
+generativa para proponer, escribir y depurar una ampliación, y también para
+estudiar el funcionamiento de la solución. El propósito es que practiques la
+lectura, la modificación y las pruebas de una aplicación gráfica.
 
 La ampliación debe cumplir estas condiciones:
 
@@ -357,41 +369,102 @@ La ampliación debe cumplir estas condiciones:
 2. Mantener al menos un **cambio controlado por un `uniform`** que dependa del
    tiempo o de la entrada del usuario. Puede afectar la posición, el color u
    otra propiedad visible.
-3. Poder señalar en el código dónde se preparan los datos, dónde se configura
-   el nuevo atributo, dónde se actualiza el `uniform` y cómo intervienen los
-   shaders en el resultado.
 
 Puedes pedirle a la IA que te explique una función, que proponga un cambio
 pequeño o que te ayude a interpretar un error. Comprueba sus propuestas
 compilando y observando la aplicación. Si una respuesta introduce funciones,
 archivos o conceptos que no entiendes, investígalos antes de conservarlos.
 
-Para estudiar tu solución, prepara estas pruebas y explicaciones en tu
-bitácora personal:
+Para profundizar en tu solución, puedes elegir estas exploraciones. Son
+opcionales y no requieren una entrega adicional:
 
 - Dibuja el recorrido de **un color de vértice** desde el arreglo de C++ hasta
   el color final de los fragmentos. Señala el papel del VBO, el VAO y ambos
   shaders.
 - Localiza el `uniform`, indica cuándo se actualiza y explica por qué ese dato
   no se envía como atributo de vértice.
-- Cambia deliberadamente un valor del atributo y uno del `uniform`. Predice
-  el efecto de cada cambio, ejecútalo y compara el resultado con tu predicción.
+- Sigue en el código dónde se preparan los datos, dónde se configura el nuevo
+  atributo, dónde se actualiza el `uniform` y cómo intervienen los shaders.
 - Identifica una decisión o una línea sugerida por la IA que tuviste que
   corregir o que verificaste por tu cuenta. Explica cómo comprobaste que era
   adecuada.
 
-Al finalizar, otra persona debería poder pedirte que cambies un color, que
-identifiques la causa de un desplazamiento o que expliques por qué desaparece
-el triángulo si se desconfigura un atributo. Usa esas preguntas para ensayar
-antes de la evaluación.
+Durante la tercera sesión puedes comenzar las pruebas de la actividad 7.
+También puedes solicitar retroalimentación sobre una dificultad o una
+decisión concreta mientras trabajas.
 
-### Actividad 07: evaluación
+### Actividad 07: probar, entregar y cerrar
 
-La evaluación será escrita, individual y presencial. Incluirá lectura de
-fragmentos de C++ y GLSL, predicción de resultados, diagnóstico de fallos y
-explicación del recorrido de los datos. También podrá pedirte justificar
-cuándo usar un atributo o un `uniform` y cómo interactúan GLFW, GLAD, el
-contexto y el controlador gráfico.
+La cuarta sesión será un taller para terminar la ampliación, ejecutar las
+pruebas y preparar la entrega. Si ya completaste el trabajo, puedes explorar
+otra variante del triángulo o solicitar retroalimentación. La evaluación de
+esta unidad consiste en el registro de las condiciones de entrega que aparecen
+abajo. No habrá examen escrito ni defensa oral.
 
-No tendrás acceso al computador, celular, apuntes, bitácora ni otros
-materiales de consulta durante la evaluación.
+#### Una única entrega
+
+En tu repositorio, prepara una ficha breve para la unidad 7 con estos tres
+componentes:
+
+1. **Sistema:** enlace al proyecto o a los archivos fuente de tu ampliación y
+   unas instrucciones breves para compilarla y ejecutarla. Puedes indicar cómo
+   usar el proyecto base y qué archivos reemplazar.
+2. **Comportamiento:** enlace a una grabación de pantalla de máximo 60 segundos
+   que muestre el color diferente por vértice, la transición de color y el
+   cambio visible controlado por el `uniform`. No necesitas narrar el video.
+3. **Pruebas:** registro de los dos experimentos siguientes. Para cada uno,
+   indica qué cambiaste, qué esperabas ver y qué observaste. Adjunta capturas
+   antes y después, una salida pertinente o una grabación breve. Puedes
+   reutilizar la misma grabación si muestra claramente ambos experimentos.
+
+**Prueba 1: cambiar un atributo.** Cambia el color de uno de los vértices en
+los datos enviados desde C++, mantén las demás condiciones y compara las
+imágenes. Observa cómo cambia la transición de color.
+
+**Prueba 2: controlar un `uniform`.** Fija temporalmente el valor del `uniform`
+que controla tu cambio visible y compáralo con su actualización habitual por
+tiempo o entrada del usuario. Verifica que el valor fijo se envíe en cada
+cuadro, para evitar que otra actualización lo reemplace. Observa qué propiedad
+deja de variar y cuál sigue igual.
+
+Puedes usar esta tabla para registrar las pruebas:
+
+| Prueba | Cambio realizado | Resultado esperado | Resultado observado | Enlace a la evidencia |
+| --- | --- | --- | --- | --- |
+| Atributo | | | | |
+| `Uniform` | | | | |
+
+Registra lo que realmente ocurrió. Si el resultado difiere de tu predicción,
+puedes documentar la diferencia y usarla como punto de partida para investigar
+o pedir ayuda. Después de los experimentos, deja disponible la versión que
+cumple las dos condiciones de la actividad 6.
+
+#### Condiciones y nota de la entrega
+
+La entrega conserva el peso del **12,5 % de la nota final del curso**. Se
+registran tres condiciones de cumplimiento, cada una con el mismo peso:
+
+| Condición | Se cumple cuando… |
+| --- | --- |
+| Sistema disponible | El enlace permite acceder al código o proyecto de la ampliación y a sus instrucciones de ejecución. |
+| Comportamiento mostrado | La grabación muestra las dos condiciones de la actividad 6: color por vértice con transición y cambio visible mediante un `uniform`. |
+| Pruebas documentadas | Los dos experimentos incluyen cambio realizado, resultado esperado, resultado observado y evidencia accesible. |
+
+**Nota de la unidad = 5 × número de condiciones cumplidas / 3.**
+
+Las notas posibles, redondeadas a dos decimales, son 0,00; 1,67; 3,33 y 5,00.
+La nota corresponde al cumplimiento del trabajo presentado. La revisión se
+limita a estas tres condiciones; no se califican la calidad de la redacción,
+la originalidad visual ni la cantidad de código escrito manualmente.
+
+Una prueba que revela un fallo puede cumplir la condición de documentación.
+Si la aplicación todavía no muestra el comportamiento solicitado, esa
+condición queda pendiente. Podrás completar las condiciones pendientes hasta
+la fecha de cierre que indique el profesor.
+
+#### Retroalimentación a solicitud
+
+Puedes solicitar retroalimentación durante el taller sobre un resultado, una
+dificultad o una decisión que quieras revisar. Incluye qué intentaste y tu
+pregunta concreta. Solicitar retroalimentación es opcional y no modifica la
+nota de cumplimiento.
