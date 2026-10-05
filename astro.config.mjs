@@ -35,7 +35,7 @@ export default defineConfig({
 						{ label: 'Unidad 5', slug: 'units/unit5'},
 						{ label: 'Unidad 6', slug: 'units/unit6'},
 						{ label: 'Unidad 7', slug: 'units/unit7', badge: 'New'},
-						{ label: 'Unidad 8', slug: 'units/unit8'},
+						{ label: 'Unidad 8', slug: 'units/unit8',badge: 'New'},
 					],
 				},
 				{
