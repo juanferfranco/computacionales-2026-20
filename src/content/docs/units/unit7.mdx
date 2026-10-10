@@ -1166,7 +1166,9 @@ el triángulo y presentamos el cuadro con `glfwSwapBuffers`.
 Modifica el programa del triángulo interactivo para que el **componente azul del color del triángulo cambie automáticamente con el tiempo**, 
 incluso cuando el mouse esté quieto. Utiliza [`glfwGetTime()`](https://www.glfw.org/docs/latest/input_guide.html#time) para obtener el tiempo 
 transcurrido en segundos desde la inicialización de GLFW. Pista: combina ese tiempo con una función seno para generar un valor que oscile 
-entre `0` y `1`, y úsalo como componente azul al actualizar el uniform `ourColor`.
+entre `0` y `1`, y úsalo como componente azul al actualizar el uniform `ourColor`. Para la función seno, puedes usar `sin()` de 
+`<cmath>`, y recuerda que `sin()` devuelve valores entre `-1` y `1`, así que tendrás que escalarlo y desplazarlo para que 
+quede en el rango `[0, 1]`.
 
 ### Actividad 07: evaluación 
 
