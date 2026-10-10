@@ -1163,47 +1163,10 @@ el triángulo y presentamos el cuadro con `glfwSwapBuffers`.
 
 ### Actividad 06: reto integrador
 
-Realiza las siguientes modificaciones al código del triángulo interactivo:
-
-* El color del triángulo cambia dinámicamente.
-* La posición del triángulo cambia mediante un uniform.
-* Al menos uno de esos cambios debe depender del tiempo o de la entrada del usuario.
-
-En tu bitácora, incluye las siguientes **5 evidencias**. Te recomiendo que no uses IA, la verdad no 
-tiene sentido que lo hagas, porque el objetivo de esta actividad es hagas el esfuerzo coginitivo para detectar 
-vacíos en tu comprensión y consolidar tu aprendizaje.
-
-**Evidencia 1: contexto y carga de OpenGL**
-
-Demuestra que comprendes la secuencia de inicialización. Explica por qué
-`GLFW` debe aparecer antes de `GLAD` y qué función cumple cada uno.
-
-**Evidencia 2: del arreglo al shader**
-
-Demuestra con el depurador o con una evidencia técnica equivalente cómo el
-arreglo de vértices termina alimentando el atributo del vertex shader.
-
-**Evidencia 3: uniform y cambio visual**
-
-Demuestra que un `uniform` modifica el resultado visual sin cambiar el VBO.
-Explica por qué esto es posible.
-
-**Evidencia 4: prueba de borde**
-
-Diseña una prueba deliberada. Por ejemplo:
-- usar un offset fuera del rango esperado,
-- enviar un color extremo,
-- desactivar un atributo,
-- cambiar un `location` y observar qué se rompe.
-
-Debes explicar qué esperabas que pasara, qué pasó realmente y qué concluyes.
-
-**Evidencia 5: responsabilidad del pipeline**
-
-Elige una decisión técnica que tomaste y justifícala. Por ejemplo:
-- por qué un dato va como `uniform` y no como atributo,
-- por qué cierto cálculo se hace en C++ y no en GLSL,
-- por qué el problema visual observado se debe a un error de estado y no a un error del arreglo de vértices.
+Modifica el programa del triángulo interactivo para que el **componente azul del color del triángulo cambie automáticamente con el tiempo**, 
+incluso cuando el mouse esté quieto. Utiliza [`glfwGetTime()`](https://www.glfw.org/docs/latest/input_guide.html#time) para obtener el tiempo 
+transcurrido en segundos desde la inicialización de GLFW. Pista: combina ese tiempo con una función seno para generar un valor que oscile 
+entre `0` y `1`, y úsalo como componente azul al actualizar el uniform `ourColor`.
 
 ### Actividad 07: evaluación 
 
