@@ -941,6 +941,7 @@ Estos serían los 3 shaders:
 Shader A:
 
 ``` glsl
+#version 460 core
 layout(location = 0) in vec3 aPos;
 
 void main() {
@@ -952,6 +953,7 @@ void main() {
 Shader B:
 
 ``` glsl
+#version 460 core
 layout(location = 1) in vec3 aColor;
 
 void main() {
@@ -962,6 +964,7 @@ void main() {
 Shader C:
 
 ``` glsl
+#version 460 core
 layout(location = 2) in vec2 aOffset;
 
 void main() {
@@ -1002,31 +1005,26 @@ De nuevo, gráficamente:
 Ya al momento de hacer el render harías algo como esto:
 
 ```cpp
+//glUseProgram(shaderProg);
 glBindVertexArray(VAO);
+
+
+// 10) Loop principal
+while (!glfwWindowShouldClose(mainWindow))
+
 
 // 1. Usar solo el atributo 0 (posición)
 glUseProgram(shaderA);
-glEnableVertexAttribArray(0);
-glDisableVertexAttribArray(1);
-glDisableVertexAttribArray(2);
 glDrawArrays(GL_TRIANGLES, 0, 3);
 
 // 2. Usar solo el atributo 1 (color)
 glUseProgram(shaderB);
-glDisableVertexAttribArray(0);
-glEnableVertexAttribArray(1);
-glDisableVertexAttribArray(2);
 glDrawArrays(GL_TRIANGLES, 0, 3);
 
 // 3. Usar solo el atributo 2 (offset)
 glUseProgram(shaderC);
-glDisableVertexAttribArray(0);
-glDisableVertexAttribArray(1);
-glEnableVertexAttribArray(2);
 glDrawArrays(GL_TRIANGLES, 0, 3);
 ```
-
-¿Pudiste notar entonces cómo se usa glEnableVertexAttribArray? Observa que en cada draw call habilitamos solo el atributo que vamos a usar. 
 
 :::note[🧐🧪✍️ Reporta en tu bitácora]
 Implementa el código anterior en tu máquina y captura pantalla del resultado. Pero antes de hacerlo 
@@ -1045,7 +1043,8 @@ información desde el código C++ a los shaders.
 
 Lo que vamos a hacer es modificar el código C++ para que pase información a los shaders de modo 
 que el triángulo cambie de color y posición dependiendo de la posición del mouse.
-Vamos a usar un `uniform` para pasar la posición del mouse y otro `uniform` para el color.
+Vamos a usar un `uniform` para pasar el desplazamiento del triángulo calculado a partir de la posición del mouse
+y otro `uniform` para el color.
 
 **¿Qué es un uniform?**
 Un `uniform` es una variable global de solo lectura dentro del shader, que puede ser establecida 
@@ -1085,7 +1084,7 @@ En el vertex shader, estamos usando un `uniform` llamado `offset` para modificar
 En el fragment shader, estamos usando un `uniform` llamado `ourColor` para modificar el color del triángulo.
 
 Ahora vamos a modificar el código C++ para que pase estos `uniforms` a los shaders. Justo antes del loop 
-de renderizado, vamos a obtener la ubicación de los `uniforms` y pasarlos al shader:
+de renderizado, vamos a activar el programa enlazado y obtener la ubicación de los `uniforms`:
 
 ```cpp
 glUseProgram(shaderProg);
@@ -1094,24 +1093,41 @@ int colorLocation = glGetUniformLocation(shaderProg, "ourColor");
 ```
 Luego, dentro del loop de renderizado, vamos a actualizar los `uniforms` con la posición del mouse y el color:
 
+En cada iteración consultamos también el tamaño actual del área de contenido de la ventana con
+`glfwGetWindowSize`. Normalizamos la posición del mouse dividiendo `xpos` entre `windowWidth`
+y `ypos` entre `windowHeight`. Las constantes `SCR_WIDTH` y `SCR_HEIGHT` se usan para solicitar
+el tamaño inicial al crear la ventana; no se actualizan automáticamente cuando la redimensionamos.
+Por eso no debemos usarlas como divisores en este paso.
+
+El siguiente bloque va dentro del loop, después de procesar los eventos con `glfwPollEvents`.
+Si alguna dimensión es cero, omitimos ese cuadro para evitar una división entre cero.
+
 ```cpp
-// Dibuja el triángulo
+// Consulto la posición del mouse
 double xpos, ypos;
 glfwGetCursorPos(mainWindow, &xpos, &ypos);
 
-// Normalizo las coordenadas del mouse
-float x = (float)xpos / (float)SCR_WIDTH;
+// Consulto el tamaño actual del área de contenido de la ventana
+int windowWidth, windowHeight;
+glfwGetWindowSize(mainWindow, &windowWidth, &windowHeight);
+
+// Evito dividir entre cero si alguna dimensión es cero
+if (windowWidth <= 0 || windowHeight <= 0)
+    continue; // Este código está dentro del loop de renderizado
+
+// Normalizo las coordenadas del mouse con el tamaño actual
+float x = (float)xpos / (float)windowWidth;
 x < 0 ? x = 0 : x;
 x > 1 ? x = 1 : x;
 
-float y = (float)ypos / (float)SCR_HEIGHT;
+float y = (float)ypos / (float)windowHeight;
 y < 0 ? y = 0 : y;
 y > 1 ? y = 1 : y;
 
-// Envio el color y la posición del triángulo
+// Envío el color del triángulo
 glUniform4f(colorLocation, x, y, 0.0f, 1.0f);
 
-// Envio el offset del triángulo normalizado a NDC
+// Convierto de [0, 1] a [-1, 1], invierto Y y envío el desplazamiento
 glUniform2f(offsetLocation, x*2 - 1, 1 - y*2);
 
 
@@ -1122,22 +1138,36 @@ glDrawArrays(GL_TRIANGLES, 0, 3);
 glfwSwapBuffers(mainWindow);
 
 ```
-En este código, estamos obteniendo la posición del mouse y normalizándola para que esté entre 0 y 1.
-Luego, estamos enviando el color y la posición del triángulo al shader usando los `uniforms` que definimos
-anteriormente.
-Finalmente, estamos dibujando el triángulo y actualizando la pantalla.
+Por ejemplo, el centro de una ventana de 400×400 está en `(200, 200)` y se normaliza a `(0.5, 0.5)`.
+Si la redimensionamos a 800×800, el centro pasa a `(400, 400)` y debe seguir normalizándose a
+`(0.5, 0.5)`. Si dividiéramos entre las constantes iniciales de 400, obtendríamos `(1, 1)`:
+el color y el desplazamiento ya no corresponderían a la posición relativa del mouse.
+
+`glfwGetCursorPos` mide la posición del mouse respecto a la esquina superior izquierda del área de
+contenido. `glfwGetWindowSize` devuelve el tamaño de esa área en las mismas unidades de coordenadas
+de pantalla. Para normalizar el mouse usamos ese tamaño. Para `glViewport` usamos el tamaño del
+framebuffer en píxeles, que puede ser diferente en pantallas de alta densidad; el callback del caso
+de estudio anterior se encarga de actualizarlo.
+
+Después de normalizar y limitar `x` e `y` al intervalo `[0, 1]`, enviamos el color `(x, y, 0, 1)`
+mediante `ourColor` y el desplazamiento `(2*x - 1, 1 - 2*y)` mediante `offset`. Así, en el centro
+el desplazamiento es `(0, 0)`, incluso después de redimensionar la ventana. Finalmente, dibujamos
+el triángulo y presentamos el cuadro con `glfwSwapBuffers`.
 
 :::note[🧐🧪✍️ Reporta en tu bitácora]
 1. Modifica el código del triángulo para que sea interactivo.
 2. Incluye una captura de pantalla del triángulo interactivo funcionando en tu máquina.
-3. Explica el proceso de normalización de las coordenadas del mouse y cómo se relaciona con el sistema de coordenadas de OpenGL.
+3. Explica cómo normalizas las coordenadas del mouse usando el tamaño actual de la ventana. Verifica que el centro se normaliza a `(0.5, 0.5)` antes y después de redimensionarla.
 4. Explica el proceso de normalización a coordenadas de dispositivo (NDC) y cómo se relaciona con el sistema de coordenadas de OpenGL.
 :::
 
 ### Actividad 06: reto integrador
 
-Realiza algunas modificaciones al código del triángulo interactivo para que puedas cambiar el color 
-y la posición del triángulo usando el teclado.
+Realiza las siguientes modificaciones al código del triángulo interactivo:
+
+* El color del triángulo cambia dinámicamente.
+* La posición del triángulo cambia mediante un uniform.
+* Al menos uno de esos cambios debe depender del tiempo o de la entrada del usuario.
 
 En tu bitácora, incluye las siguientes **5 evidencias**. Te recomiendo que no uses IA, la verdad no 
 tiene sentido que lo hagas, porque el objetivo de esta actividad es hagas el esfuerzo coginitivo para detectar 
