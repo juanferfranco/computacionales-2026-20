@@ -1,0 +1,39 @@
+---
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+const collectionUrl = 'https://juanferfranco.github.io/computacionales-interactivos/';
+const animations = [
+  {
+    path: 'graficas/triangulo/',
+    title: 'Cómo OpenGL dibuja un triángulo',
+    description: 'Recorre la preparación del contexto, los buffers y los shaders hasta obtener una imagen en pantalla.',
+  },
+  {
+    path: 'graficas/datos-vbo-vao/',
+    title: 'De los datos al dibujo: VBO y VAO',
+    description: 'Explora un vértice con posición, color y desplazamiento: atributos, bytes, stride y offset.',
+  },
+  {
+    path: 'graficas/movimiento-y-color/',
+    title: 'Cómo OpenGL mueve y colorea un triángulo',
+    description: 'Relaciona la posición del mouse con los uniforms de desplazamiento y color en cada cuadro.',
+  },
+  {
+    path: 'graficas/cpu-ram-gpu-vram/',
+    title: 'Del mouse al framebuffer',
+    description: 'Sigue los programas, los datos y las órdenes entre CPU, RAM, GPU y VRAM.',
+  },
+];
+---
+
+<CardGrid>
+  {animations.map((animation) => (
+    <LinkCard
+      title={animation.title}
+      description={animation.description}
+      href={`${collectionUrl}${animation.path}`}
+    />
+  ))}
+</CardGrid>
+
+<p><a href={collectionUrl}>Explorar la colección de animaciones de Sistemas Computacionales</a>.</p>
